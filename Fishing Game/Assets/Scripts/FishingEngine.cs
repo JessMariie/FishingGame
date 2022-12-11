@@ -10,32 +10,6 @@ using UnityEngine.UI;
 
 public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
 {
-    public GameObject camera;
-    public GameObject fishingRod;
-    public GameObject fishingRodFixed;
-    public GameObject holdingRod;
-    public GameObject throwButton;
-    public GameObject player;
-    public GameObject playerController;
-    public GameObject reelButton;
-    public GameObject moveButton;
-    public GameObject mainRod;
-    public GameObject rodPrefab;
-    public GameObject caughtFish;
-    public GameObject infoPanel;
-    public GameObject[] fishes;
-    public MeshCollider lakeColider;
-    public bool isHoldingRod;
-    public bool isThrown;    
-    public bool isFoundFish;
-    public int waitingPeriod;
-    public int caughtFishIndex;
-    public float caughtPossibility;
-    public DateTime throwedTime;
-    public DateTime foundFishTime;
-    public DateTime reeledTime;
-    public string[] fishName;
-
     [System.Serializable]
     public class Result
     {
@@ -49,7 +23,34 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
         public int blueGillTotal;
         public int coin;
     }
-
+    
+    // Game UI
+    public GameObject main;
+    public GameObject camera;
+    public GameObject fishingRod;
+    public GameObject fishingRodFixed;
+    public GameObject holdingRod;
+    public GameObject throwButton;
+    public GameObject player;
+    public GameObject playerController;
+    public GameObject reelButton;
+    public GameObject moveButton;
+    public GameObject rodPrefab;
+    public GameObject infoPanel;
+    public GameObject[] fishes;
+    public GameObject[] fishAvatars;
+    public MeshCollider lakeColider;
+    public bool isHoldingRod;
+    public bool isThrown;    
+    public bool isFoundFish;
+    public int waitingPeriod;
+    public int caughtFishIndex;
+    public float caughtPossibility;
+    public DateTime throwedTime;
+    public DateTime foundFishTime;
+    public DateTime reeledTime;
+    public string[] fishName;
+    
     public Text bluegillCaughtText;
     public Text bluegillSellText;
     public Text bluegillTotalText;
@@ -61,47 +62,66 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
     public Text muskieTotalText;
     public Text priceText;
     
+    // Api URL
     string readURL;
     string sellURL;
     string caughtURL;
 
-    private void OnTriggerEnter(Collider other)
-    {
-        // Hold the fishing rod.
-        if(other.tag == "rod")
-        {
-            other.gameObject.SetActive(false);
-            holdingRod.gameObject.SetActive(true);
-            isHoldingRod = true;            
-        }
-
-        if (other.tag == "lake" && isHoldingRod == true)
-        {
-            //lakeColider.isTrigger = false;
-            throwButton.SetActive(true);
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.tag == "lake" && isHoldingRod == true)
-        {            
-            throwButton.SetActive(false);
-        }
-    }
-
     void Start() 
     {
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Initialize game situation
+        if(PlayerPrefs.GetString("ISHOLDING") == "" && PlayerPrefs.GetString("ISFISHING") == "") // When the player starts the game first time
+        {
+            if(PlayerPrefs.GetFloat("POSY") == 0)
+            {
+                this.transform.position = new Vector3(435f, 99.92f, 240f);
+            }
+            else
+            {
+                this.transform.position = new Vector3(PlayerPrefs.GetFloat("POSX"), PlayerPrefs.GetFloat("POSY"), PlayerPrefs.GetFloat("POSZ"));
+            }
+        }
+        else
+        {
+            // When the player is holding the fishing rod.
+            if(string.Equals(PlayerPrefs.GetString("ISHOLDING"), "true"))
+            {
+                isHoldingRod = true;
+                holdingRod.gameObject.SetActive(true);
+                fishingRod.gameObject.SetActive(false);
+                this.transform.position = new Vector3(PlayerPrefs.GetFloat("POSX"), PlayerPrefs.GetFloat("POSY"), PlayerPrefs.GetFloat("POSZ"));
+            }
+
+            // When the player is fishing.
+            if(string.Equals(PlayerPrefs.GetString("ISFISHING"), "true"))
+            {
+                holdingRod.gameObject.SetActive(true);
+                fishingRod.gameObject.SetActive(false);                
+                player.SetActive(false);
+                playerController.GetComponent<ThirdPersonController>().enabled = false;
+                camera.SetActive(true);
+                fishingRodFixed.SetActive(true);   
+                fishingRodFixed.GetComponent<Animator>().enabled = false;  
+                moveButton.SetActive(true);           
+                this.transform.position = new Vector3(PlayerPrefs.GetFloat("POSX"), PlayerPrefs.GetFloat("POSY"), PlayerPrefs.GetFloat("POSZ"));
+            }
+        }        
+        
+        // Api URL - controller 
         readURL = FishingUI.instance.absURL + "api/getUserData";
         sellURL = FishingUI.instance.absURL + "api/sell";
-        caughtURL = FishingUI.instance.absURL + "api/catch";
+        caughtURL = FishingUI.instance.absURL + "api/catch"; 
+
+        main.transform.localScale = new Vector3(Screen.width / 1366f, Screen.height / 768f, 1f);       
     }
 
     private void Update()
     {        
         Cursor.lockState = CursorLockMode.None;
-        //Cursor.visible = true;
+        main.transform.localScale = new Vector3(Screen.width / 1366f, Screen.height / 768f, 1f);
 
+        // When fish bits the bait
         if ((System.DateTime.Now - throwedTime).TotalSeconds >= waitingPeriod && isThrown == true)
         {
             isThrown = false;
@@ -111,9 +131,18 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
             reelButton.SetActive(true);
             infoPanel.SetActive(true);
             infoPanel.GetComponentInChildren<Text>().text = "" + fishName[caughtFishIndex] + " bit the bait!";
+
+            for (int i = 0; i < fishAvatars.Length; i++)  // displays fish 
+            {
+                fishAvatars[i].SetActive(false);
+            }
+
+            fishAvatars[caughtFishIndex].SetActive(true);
+            
             StartCoroutine(DelayShowPanel());
         }
 
+        // When fish ran away.
         if (isFoundFish == true && (System.DateTime.Now - reeledTime).TotalSeconds > 2.5f)
         {
             infoPanel.SetActive(true);
@@ -122,8 +151,14 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
             isFoundFish = false;
             reelButton.SetActive(false);
             throwButton.SetActive(true);
+
+            for (int i = 0; i < fishAvatars.Length; i++)
+            {
+                fishAvatars[i].SetActive(false);      // fish display off
+            }
         }
 
+        // When fish was caught.
         if (isFoundFish == true && (System.DateTime.Now - foundFishTime).TotalSeconds > 12f && caughtPossibility >= 0.2f)
         {
             infoPanel.SetActive(true);
@@ -132,7 +167,13 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
             isFoundFish = false;
             reelButton.SetActive(false);            
             fishes[caughtFishIndex].SetActive(true);
-            StartCoroutine(RequestCatch(caughtURL, fishName[caughtFishIndex]));
+
+            for (int i = 0; i < fishAvatars.Length; i++)
+            {
+                fishAvatars[i].SetActive(false);    // fish display off
+            }
+
+            StartCoroutine(RequestCatch(caughtURL, fishName[caughtFishIndex]));    // call IEliminator to try and catch a fish
             StartCoroutine(DelayShowFish());
         }
         else if (isFoundFish == true && (System.DateTime.Now - foundFishTime).TotalSeconds > 12f && caughtPossibility < 0.2f)
@@ -143,25 +184,67 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
             isFoundFish = false;
             reelButton.SetActive(false);
             throwButton.SetActive(true);
+
+            for (int i = 0; i < fishAvatars.Length; i++)
+            {
+                fishAvatars[i].SetActive(false);
+            }
+        }
+
+        // Save player position
+        PlayerPrefs.SetFloat("POSX", this.transform.position.x);
+        PlayerPrefs.SetFloat("POSY", this.transform.position.y);
+        PlayerPrefs.SetFloat("POSZ", this.transform.position.z);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private void OnTriggerEnter(Collider other)
+    {
+        // Hold the fishing rod.
+        if(other.tag == "rod")
+        {
+            other.gameObject.SetActive(false);
+            holdingRod.gameObject.SetActive(true);  //Picks up rod
+            isHoldingRod = true;      
+            PlayerPrefs.SetString("ISHOLDING", "true");      
+        }
+
+        // When user go near the lake   - collides with lake
+        if (other.tag == "lake" && isHoldingRod == true)
+        {
+            throwButton.SetActive(true);
         }
     }
 
+    // Player leave the lake
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "lake" && isHoldingRod == true)
+        {            
+            throwButton.SetActive(false);  // shows throw button
+        }
+    }    
+
+    // Click throw button
     public void ThrowClick()
     {
         player.SetActive(false);
         playerController.GetComponent<ThirdPersonController>().enabled = false;
         camera.SetActive(true);
         fishingRodFixed.SetActive(false);
-        fishingRodFixed.SetActive(true);
-        //mainRod = Instantiate(rodPrefab, new Vector3(0 , 0, 0), Quaternion.identity);
-        //mainRod.transform.position = camera.transform.position + camera.transform.forward * 2;
+        fishingRodFixed.SetActive(true);     
+        moveButton.SetActive(true);           
+
         isThrown = true;
         waitingPeriod = UnityEngine.Random.RandomRange(5, 10);
         caughtFishIndex = UnityEngine.Random.RandomRange(0, 3);
         caughtPossibility = UnityEngine.Random.Range(0f, 1f);
         throwedTime = System.DateTime.Now;
+
+        PlayerPrefs.SetString("ISFISHING", "true");
     }
 
+    // Click Move Button
     public void MoveClick()
     {
         camera.SetActive(false);
@@ -169,13 +252,15 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
         throwButton.SetActive(false);
         moveButton.SetActive(false);
         reelButton.SetActive(false);
-        //Destroy(mainRod);
         isThrown = false;
         isFoundFish = false;        
         player.SetActive(true);
         playerController.GetComponent<ThirdPersonController>().enabled = true;
+
+        PlayerPrefs.SetString("ISFISHING", "");
     }
 
+    // Click Reel Button
     public void ReelClick()
     {
         reeledTime = System.DateTime.Now;
@@ -187,6 +272,7 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
 
         infoPanel.SetActive(false);        
     }
+
     IEnumerator DelayShowFish()
     {
         yield return new WaitForSeconds(3f);
@@ -198,7 +284,6 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
         }
     }
 
-
     public void OnDrag(PointerEventData eventData)
     {
         if (eventData.pointerCurrentRaycast.gameObject.tag == "reel")
@@ -209,15 +294,17 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        print("!!!!!!!!!");
         if (eventData.pointerCurrentRaycast.gameObject.tag == "reel")
         {           
             reeledTime = System.DateTime.Now;
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Inventory Menu
     public void SellBtnClick()
     {
+        StopAllCoroutines();
         StartCoroutine(RequestSell(sellURL));
     }
 
@@ -271,9 +358,16 @@ public class FishingEngine : MonoBehaviour, IPointerClickHandler, IDragHandler
 
     public void InventoryBtnClick()
     {        
-        StartCoroutine(RequestRead(readURL));
+        bassSellText.text = "0";
+        bluegillSellText.text = "0";
+        muskieSellText.text = "0";
+
+        StopAllCoroutines();
+        StartCoroutine(RequestRead(readURL));        
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Apis
     IEnumerator RequestRead(string url)
     {
         WWWForm form = new WWWForm();

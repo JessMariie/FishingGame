@@ -18,10 +18,12 @@ public class FishingUI : MonoBehaviour
         public int bassTotal;
         public int muskieTotal;
         public int blueGillTotal;
-        public int coin;
+        public int coin;  
     }
 
     public static FishingUI instance;
+
+    // Fishing Main UI
     public GameObject main;
     public GameObject signinMenu;
     public GameObject signupMenu;  
@@ -47,6 +49,7 @@ public class FishingUI : MonoBehaviour
     float showingTime = 0;
     bool isShowing = false;
 
+    // Api URL
     public string absURL = "";
     string signupURL;
     string signinURL;
@@ -58,9 +61,8 @@ public class FishingUI : MonoBehaviour
         instance = this;
     }
 
-    void Start()
+    void Start()             // controller 
     {
-        //print("!!!!!!!!" + int.Parse(""));
         main.transform.localScale = new Vector3(Screen.width / 1366f, Screen.height / 768f, 1f);
         signupURL = absURL + "api/signup";
         signinURL = absURL + "api/login";
@@ -72,7 +74,7 @@ public class FishingUI : MonoBehaviour
     {
         main.transform.localScale = new Vector3(Screen.width / 1366f, Screen.height / 768f, 1f);
 
-        // Show alert.        
+        // Show alert(Warning).        
         if(isShowing)
         {
             alert.SetActive(true);
@@ -91,40 +93,44 @@ public class FishingUI : MonoBehaviour
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // SignIn Menu
-    public void SigninBtnClick()
+    public void SigninBtnClick()   
     {
-        if(nameInput.text != "" && passwordInput.text != "")
+        if(nameInput.text != "" && passwordInput.text != "")  // if input text user name and password is not left empty
         {            
-            StartCoroutine(PostRequestSign(signinURL, nameInput.text, passwordInput.text));
+            // Request "sign in" Api.
+            StopAllCoroutines();   // pause  frame
+            StartCoroutine(PostRequestSign(signinURL, nameInput.text, passwordInput.text)); // call IElimanator to verify account info
         }
         else
         {
-            isShowing = true;
-            showingTime = 2f;
-            alertText.text = "Please fill all fields.";
+            isShowing = true;  //show screen to enter info
+            showingTime = 2f;   // display message 2 frames
+            alertText.text = "Please fill all fields."; // message text
         }        
     }
 
-    public void Signup0BtnClick()
+    public void Signup0BtnClick()    // sign up button switch screen
     {
         signinMenu.SetActive(false);
-        signupMenu.SetActive(true);
+        signupMenu.SetActive(true);     // switch screens
         nameInput.text = "";
-        passwordInput.text = "";
+        passwordInput.text = "";   //intilize to empty
     }    
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //SignUp Menu
-    public void SignupBtnClick()
+    public void SignupBtnClick()  // sign up after user enters info
     {
-        if(name1Input.text != "" && password1Input.text != "" && password2Input.text != "")
+        if(name1Input.text != "" && password1Input.text != "" && password2Input.text != "")   // if input text user name and password is not left empty
         {
-            if(password1Input.text == password2Input.text)
+            if(password1Input.text == password2Input.text)   // if password match
             {
-                StartCoroutine(PostRequestSign(signupURL, name1Input.text, password1Input.text));                                
+                // Request "sign up" Api
+                StopAllCoroutines();   // pause frame
+                StartCoroutine(PostRequestSign(signupURL, name1Input.text, password1Input.text));        // call IEliminator to create and sign in account                        
             }
             else
-            {
+            {                              // display incorrect message & initilize pasword 2 to blank
                 isShowing = true;
                 showingTime = 2f;
                 alertText.text = "Please type password again.";
@@ -132,17 +138,17 @@ public class FishingUI : MonoBehaviour
             }  
         }
         else
-        {
+        {              // displays error message for all fields
             isShowing = true;
             showingTime = 2f;
             alertText.text = "Please fill all fields.";
         }                     
     }
 
-    public void SignupBackBtnClick()
+    public void SignupBackBtnClick()  // back button
     {
         signinMenu.SetActive(true);
-        signupMenu.SetActive(false);
+        signupMenu.SetActive(false);   // switches screens
         name1Input.text = "";
         password1Input.text = "";
         password2Input.text = "";
@@ -150,30 +156,32 @@ public class FishingUI : MonoBehaviour
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Inventory Menu    
-    public void InventoryBackBtnClick()
+    public void InventoryBackBtnClick()    // back button for inventory
     {
         inventoryMenu.SetActive(false);
-        startMenu.SetActive(true);
+        startMenu.SetActive(true);  // brings user back to start menue
     }
 
     public void SellBtnClick()
     {
-        StartCoroutine(RequestSell(sellURL));                
+        // Requrest "sell" Api
+        StopAllCoroutines();  // pause frame
+        StartCoroutine(RequestSell(sellURL));    // call IElimtinator to sell            
     }
 
     public void PlusBlueGillBtnClick()
     {
         if(int.Parse(bluegillCaughtText.text) > int.Parse(bluegillSellText.text))
         {
-            bluegillSellText.text = (int.Parse(bluegillSellText.text) + 1).ToString();
+            bluegillSellText.text = (int.Parse(bluegillSellText.text) + 1).ToString();  //  add 1 on display sell count
         }
     }
 
     public void MinusBlueGillBtnClick()
     {
-        if(int.Parse(bluegillSellText.text) > 0)
+        if(int.Parse(bluegillSellText.text) > 0)  // checks if not 0
         {
-            bluegillSellText.text = (int.Parse(bluegillSellText.text) - 1).ToString();
+            bluegillSellText.text = (int.Parse(bluegillSellText.text) - 1).ToString();    //  minus 1 on display sell count
         }
     }
 
@@ -208,40 +216,49 @@ public class FishingUI : MonoBehaviour
             muskieSellText.text = (int.Parse(muskieSellText.text) - 1).ToString();
         }
     }
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Start Menu
     public void StartBtnClick()
     {
+        // Start the game.
         SceneManager.LoadScene("Game");
     }
 
-    public void SignoutBtnClick()
+    public void SignoutBtnClick()    
     {
         nameInput.text = "";
-        passwordInput.text = "";
+        passwordInput.text = "";             
         startMenu.SetActive(false);
         signinMenu.SetActive(true);
     }
 
-    public void InventoryBtnClick()
+    public void InventoryBtnClick()     // shows inventory
     {
+        bassSellText.text = "0";
+        bluegillSellText.text = "0";
+        muskieSellText.text = "0";
         startMenu.SetActive(false);
         inventoryMenu.SetActive(true);
-        StartCoroutine(RequestRead(readURL));
-    }
 
+        // Request "read data" Api
+        StopAllCoroutines();
+        StartCoroutine(RequestRead(readURL));   // calls IEliminator to read user game info for inventory
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Apis
     IEnumerator PostRequestSign(string url, string name, string password)
     {               
-        WWWForm form = new WWWForm();
+        // Send user name and password.
+        WWWForm form = new WWWForm();   // allows unity to send info/field
         form.AddField("name", name);
         form.AddField("password", password);
 
-        UnityWebRequest uwr = UnityWebRequest.Post(url, form);
+        UnityWebRequest uwr = UnityWebRequest.Post(url, form);  // send request
         yield return uwr.SendWebRequest();
 
-        if (uwr.result == UnityWebRequest.Result.ConnectionError)
+        if (uwr.result == UnityWebRequest.Result.ConnectionError)  // if not connected 
         {
             Debug.Log("Error While Sending: " + uwr.error);
         }
@@ -249,48 +266,49 @@ public class FishingUI : MonoBehaviour
         {
             Debug.Log("Received: " + uwr.downloadHandler.text);
 
+            // Recieve data from backend.
             Result loadData = JsonUtility.FromJson<Result>(uwr.downloadHandler.text);
             string result = loadData.result;
             int userId = loadData.id;
 
-            if(url == signinURL)
+            if(url == signinURL)   // checks account with database & determine output
             {
-                if(string.Equals(result, "1"))
+                if(string.Equals(result, "1")) // Sign in successfully.
                 {
                     PlayerPrefs.SetInt("USER_ID", userId);
                     signinMenu.SetActive(false);
                     signupMenu.SetActive(false);
                     startMenu.SetActive(true);                                        
                 }
-                else if(string.Equals(result, "2"))
+                else if(string.Equals(result, "2")) // User doesn't exist
                 {
                     isShowing = true;
                     showingTime = 2f;
-                    alertText.text = "Not registered.";
+                    alertText.text = "Not registered";
                 }
-                else
+                else // Enter wrong password.
                 {
                     isShowing = true;
                     showingTime = 2f;
-                    alertText.text = "Wrong password.";
+                    alertText.text = "Wrong password";
                     passwordInput.text = "";
                 }
             }
             else if(url == signupURL)
             {
-                if(string.Equals(result, "1"))
+                if(string.Equals(result, "1")) // User already exists
                 {
                     isShowing = true;
                     showingTime = 2f;
-                    alertText.text = "Already Exists.";
+                    alertText.text = "Already Exists";
                 }
-                else
+                else // Sign up succesfully.
                 {
                     signinMenu.SetActive(true);
                     signupMenu.SetActive(false);
                     isShowing = true;
                     showingTime = 2f;
-                    alertText.text = "Successful.";
+                    alertText.text = "Successful";
                 }                                                
             }
         }
@@ -298,6 +316,7 @@ public class FishingUI : MonoBehaviour
 
     IEnumerator RequestRead(string url)
     {               
+        // Send user_id to server.
         WWWForm form = new WWWForm();
         form.AddField("id", PlayerPrefs.GetInt("USER_ID"));        
 
@@ -312,6 +331,7 @@ public class FishingUI : MonoBehaviour
         {
             Debug.Log("Received: " + uwr.downloadHandler.text);
 
+            // Receive user data
             Result loadData = JsonUtility.FromJson<Result>(uwr.downloadHandler.text);
             bluegillCaughtText.text = loadData.blueGillCaught.ToString();   
             bassCaughtText.text = loadData.bassCaught.ToString();
@@ -325,6 +345,7 @@ public class FishingUI : MonoBehaviour
 
     IEnumerator RequestSell(string url)
     {               
+        // Send "sell data" to server
         WWWForm form = new WWWForm();
         form.AddField("id", PlayerPrefs.GetInt("USER_ID")); 
         form.AddField("bass", int.Parse(bassSellText.text));
@@ -344,6 +365,7 @@ public class FishingUI : MonoBehaviour
         {
             Debug.Log("Received: " + uwr.downloadHandler.text);
 
+            // Receive results from server.
             Result loadData = JsonUtility.FromJson<Result>(uwr.downloadHandler.text);
             bassCaughtText.text = loadData.bassCaught.ToString();
             bluegillCaughtText.text = loadData.blueGillCaught.ToString();

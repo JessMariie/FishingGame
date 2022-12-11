@@ -11,10 +11,11 @@ class DataController extends Controller
     //
     public function getUserData(Request $request)
     {
-        $id = $request->id;
+        // When the user logs in, a user ID is saved with this ID we can retreve the corresponding user data in the database. 
+        $id = $request->id;   // users ID 
 
         $fish = Fish::where('ID', $id)->get()->first();
-
+        // retrieving data 
         $BassCaught = $fish->BassCaught;
         $MuskieCaught = $fish->MuskieCaught;
         $BlueGillCaught = $fish->BlueGillCaught;
@@ -24,7 +25,7 @@ class DataController extends Controller
 
         $coin = Info::where('ID', $id)->get()->first()->CoinAmt;
 
-        return response()->json([
+        return response()->json([                                // results pulled 
             'bassCaught' => $BassCaught,
             'muskieCaught' => $MuskieCaught,
             'blueGillCaught' => $BlueGillCaught,
@@ -39,43 +40,44 @@ class DataController extends Controller
     public function catch(Request $request)
     {
         # code...
-        $id = $request->id;
-        $fish_type = $request->fish_name;
+        $id = $request->id;  // users ID 
+        $fish_type = $request->fish_name;   
 
         $fish = Fish::where('ID', $id)->get()->first();
-
-        switch($fish_type)
+        
+        // 3 types of fish saved when caught adding totals in the inventory  
+        switch($fish_type)  
         {
             case 'Bass':
                 $caughtcount = $fish->BassCaught;
-                $caughtcount++;
+                $caughtcount++;                                // adds one to caught total
 
                 Fish::where('ID', $id)->update(['BassCaught' => $caughtcount]);
 
                 $totalcount = $fish->BassTotal;
-                $totalcount++;
+                $totalcount++;                               // adds one to total count
                 Fish::where('ID', $id)->update(['BassTotal' => $totalcount]);
 
                 break;
 
             case 'Muskie':
                 $caughtcount = $fish->MuskieCaught;
-                $caughtcount++;
+                $caughtcount++;                                 // adds one to caught total
                 Fish::where('ID', $id)->update(['MuskieCaught' => $caughtcount]);
 
                 $totalcount = $fish->MuskieTotal;
-                $totalcount++;
+                $totalcount++;                                 // adds one to total count
                 Fish::where('ID', $id)->update(['MuskieTotal' => $totalcount]);
 
                 break;
             
             case 'BlueGill':
                 $caughtcount = $fish->BlueGillCaught;
-                $caughtcount++;
+                $caughtcount++;                                  // adds one to caught total
                 Fish::where('ID', $id)->update(['BlueGillCaught' => $caughtcount]);
 
                 $totalcount = $fish->BlueGillTotal;
-                $totalcount++;
+                $totalcount++;                                  // adds one to total count
                 Fish::where('ID', $id)->update(['BlueGillTotal' => $totalcount]);
 
                 break;
@@ -89,7 +91,7 @@ class DataController extends Controller
         $MuskieTotal = $fish->MuskieTotal;
         $BlueGillTotal = $fish->BlueGillTotal;
 
-        return response()->json([
+        return response()->json([                       // results changed 
             'bassCaught' => $BassCaught,
             'muskieCaught' => $MuskieCaught,
             'blueGillCaught' => $BlueGillCaught,
@@ -122,7 +124,7 @@ class DataController extends Controller
         ]); 
 
         $info = Info::where('ID', $id)->get()->first();
-        $CoinAmt = $info->CoinAmt + $coin;
+        $CoinAmt = $info->CoinAmt + $coin;                                 // coin is increase according to its set Coin amount for the fish
         
         Info::where('ID', $id)->update(['CoinAmt' => $CoinAmt]);
 

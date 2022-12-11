@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user(); // request for users info in the database
 });
-
-Route::post('/signup', [UserController::class, 'signup']);
-Route::post('/login', [UserController::class, 'login']);
-Route::post('/getUserData', [DataController::class, 'getUserData']);
-Route::post('/catch', [DataController::class, 'catch']);  // catch a new fish
-Route::post('/sell', [DataController::class, 'sell']);  // sell fishes
+// Uniy will send the request to the backend database 
+Route::post('/signup', [UserController::class, 'signup']); // function sign up from userController
+Route::post('/login', [UserController::class, 'login']); // function login from userController
+Route::post('/getUserData', [DataController::class, 'getUserData']); // function getUserData from dataController
+Route::post('/catch', [DataController::class, 'catch']);  // catch a new fish from dataController
+Route::post('/sell', [DataController::class, 'sell']);  // sell fishes from dataController

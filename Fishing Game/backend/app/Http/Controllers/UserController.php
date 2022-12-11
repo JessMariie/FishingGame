@@ -16,10 +16,11 @@ class UserController extends Controller
 {
     //
     public function signup(Request $request)
-    {
-        $name = $request->name;
+    { 
+    // if account exist
+        $name = $request->name;  // initilize name
 
-        $name_count = User::where('name', $name)->get()->count();
+        $name_count = User::where('name', $name)->get()->count();   // search database if same user exist
 
         if($name_count != 0)
         {
@@ -27,19 +28,19 @@ class UserController extends Controller
                 'result' => '1' // already exists
             ]);
         }
+    // entering new user's username and password created 
+        $user = new User();  // if the current user is new, create a new user
+        $user->name = $request->name; // inserts name
+        $user->password = Hash::make($request->password);  // hash password created from inserted user text
+        $user->save();                                           // if the pasword is not hashed others can see it in the database 
 
-        $user = new User();
-        $user->name = $request->name;
-        $user->password = Hash::make($request->password);
-        $user->save();
+    // Create new info
+        $id = User::all()->last()->id;   // sets new ID for new user 
 
-        // Create new info
-        $id = User::all()->last()->id;
-
-        $info = new Info();
-        $info->ID = $id;
-        $info->CoinAmt = 0;
-        $info->position = DB::raw("(GeomFromText('POINT(0 0)'))");
+        $info = new Info();  
+        $info->ID = $id;           // sets ID
+        $info->CoinAmt = 0;        // sets coin amount to zero 
+        $info->position = DB::raw("(GeomFromText('POINT(0 0)'))");   // sets position
         $info->save();
 
         //Create fish lists for the new user
@@ -51,7 +52,7 @@ class UserController extends Controller
         $fish->BassTotal = 0;
         $fish->MuskieTotal = 0;
         $fish->BlueGillTotal = 0;
-        $fish->save();
+        $fish->save();               // initulize all fish to 0 and save in database
 
         return response([
             'result' => '2' // success
@@ -63,26 +64,26 @@ class UserController extends Controller
         $name = $request->name;
         $password = $request->password;
 
-        if(Auth::attempt(['name' => $name, 'password' => $password]))
+        if(Auth::attempt(['name' => $name, 'password' => $password]))  // checks for a match 
         {
             $id = User::where('name', $name)->get()->first()->id;
             return response([
-                'result' => '1', //success
+                'result' => '1', //success at log in
                 'id' => $id
             ]);
         }
         else{
-            $count = User::where('name', $name)->get()->count();
+            $count = User::where('name', $name)->get()->count();  // checks database
 
             if($count == 0)
             {
                 return response([
-                    'result' => '2' // no registered
+                    'result' => '2' // not registered because name doesn't exist
                 ]);
             }
             else{
                 return response([
-                    'result' => '3' // wrong pwd-
+                    'result' => '3' // wrong pwd- name exist but wrong password
                 ]);
             }
         }
